@@ -1,10 +1,10 @@
-use std::cmp::min;
-use std::{ops::{Index, IndexMut}, collections::HashSet};
+use std::ops::{Index, IndexMut};
 
 #[derive(Clone)]
 struct Cell {
     height: i32,
     min_path: Option<u32>,
+    is_start: bool,
     is_end: bool,
 }
 
@@ -22,13 +22,14 @@ impl Cell {
 
         return Cell {
             height,
-            min_path: if letter == 'E' { Some(0) } else { None },
+            min_path: if letter == 'S' { Some(0) } else { None },
+            is_start: letter == 'S',
             is_end: letter == 'E',
         };
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Copy, Clone)]
 struct Pos(usize, usize);
 
 impl Pos {
@@ -98,6 +99,17 @@ impl Map {
         }
     }
 
+    fn get_start(&self) -> Option<Pos> {
+        for (j, row) in self.rows.iter().enumerate() {
+            for (i, cell) in row.iter().enumerate() {
+                if cell.is_start {
+                    return Some(Pos(i, j));
+                }
+            }
+        }
+        return None;
+    }
+
     fn get_end(&self) -> Option<Pos> {
         for (j, row) in self.rows.iter().enumerate() {
             for (i, cell) in row.iter().enumerate() {
@@ -110,7 +122,7 @@ impl Map {
     }
 
     fn climbable(&self, from: Pos, to: Pos) -> bool {
-        return self[from].height - self[to].height <= 1;
+        return self[to].height - self[from].height <= 1;
     }
 
     fn better_path(&self, from: Pos, to: Pos) -> bool {
@@ -141,18 +153,12 @@ fn main() {
     let height = map.height();
 
     let mut to_explore: Vec<Pos> = vec![];
-    let end = map.get_end().unwrap();
-    to_explore.push(end);
-
-    let mut starts: HashSet<Pos> = HashSet::new();
+    let start = map.get_start().unwrap();
+    to_explore.push(start);
 
     while !to_explore.is_empty() {
         let pos = to_explore.pop().unwrap();
         let path_len = map[pos].min_path.unwrap();
-
-        if map[pos].height == 0 {
-            starts.insert(pos);
-        }
 
         if let Some(to) = pos.up() {
             if map.better_path(pos, to) {
@@ -183,13 +189,7 @@ fn main() {
         }
     }
 
-    let best_start = starts.iter().fold(u32::MAX, |best, pos| {
-        if let Some(p) = map[*pos].min_path {
-            min(p, best)
-        } else {
-            best
-        }
-    });
+    let end = map.get_end().unwrap();
 
-    println!("best start steps = {}", best_start);
+    println!("path len = {}", map[end].min_path.unwrap());
 }
