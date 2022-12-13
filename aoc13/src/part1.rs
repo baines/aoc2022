@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::cmp::Ordering;
 
-#[derive(Debug, Eq, Clone)]
+#[derive(Debug, Eq)]
 enum Packet {
     Number(u32),
     List(Vec<Packet>)
@@ -111,7 +111,7 @@ impl Packet {
 fn main() {
     let input = std::fs::read_to_string("input").unwrap();
 
-    let mut packets: Vec<Packet> = input.lines().filter_map(|line| {
+    let packets: Vec<Packet> = input.lines().filter_map(|line| {
         if line.is_empty() {
             None
         } else {
@@ -119,20 +119,20 @@ fn main() {
         }
     }).collect();
 
-    let divider2 = Packet::List(vec![Packet::List(vec![Packet::Number(2)])]);
-    let divider6 = Packet::List(vec![Packet::List(vec![Packet::Number(6)])]);
+    let mut index = 1;
+    let mut result = 0;
 
-    packets.push(divider2.clone());
-    packets.push(divider6.clone());
-
-    packets.sort();
-
-    let mut result = 1usize;
-
-    for (i, packet) in packets.iter().enumerate() {
-        if *packet == divider2 || *packet == divider6 {
-            result = result * (i + 1);
+    for pairs in packets.chunks(2) {
+        match pairs {
+            [a, b] => {
+                if a <= b {
+                    result += index
+                }
+            },
+            _ => panic!("unexpected packet")
         }
+
+        index += 1
     }
 
     println!("result = {}", result);
