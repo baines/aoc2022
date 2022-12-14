@@ -88,7 +88,20 @@ fn main() {
         map: vec![]
     };
 
-    let paths: Vec<Path> = input.lines().map(|l| l.parse().unwrap()).collect();
+    let mut paths: Vec<Path> = input.lines().map(|l| l.parse().unwrap()).collect();
+
+    let maxy = paths.iter().fold(0, |acc, p| {
+        let mut res = acc;
+        for v in &p.vertices {
+            res = max(res, v.y);
+        }
+        res
+    });
+
+    // XXX: 1000 is a hacky guess at max x
+    paths.push(Path {
+        vertices: vec![Pos { x: 0, y: maxy + 2 }, Pos { x: 1000, y: maxy + 2 }]
+    });
 
     //println!("paths = {:?}", paths);
 
@@ -194,7 +207,7 @@ fn drop_sand(cave: &Cave, pos: &Pos) -> SandFallResult {
         Some(Tile::Air) => { SandFallResult::Open },
         Some(Tile::Rock) => { SandFallResult::Blocked },
         Some(Tile::Sand) => { SandFallResult::Blocked },
-        None => { SandFallResult::Infinite },
+        None => { panic!("shouldn't fall off the bottom any more") },
     }
 }
 
